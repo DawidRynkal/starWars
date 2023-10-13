@@ -3,44 +3,18 @@ import { useGetSingleVehicleQuery } from "../../services/star-wars-api";
 import { ClipLoader } from "react-spinners";
 import { styledTheme } from "../../theme";
 import ErrorMessage from "../../shared/components/ErrorMessage";
-import { useEffect, useState } from "react";
 import styled from "styled-components";
-import Vehicle from '../../assets/vehicle.png'
+import Vehicle from "../../assets/vehicle.png";
+import useFetchPersonNames from "../../hooks/useFetchPersonName";
 
 const VehiclesDetails = () => {
-  const { vehicleUrl } = useLocation().state;
+  const { url } = useLocation().state;
   const { data, error, isLoading } = useGetSingleVehicleQuery({
-    vehicleUrl: vehicleUrl,
+    vehicleUrl: url,
   });
-
-  const [pilotsNames, setPilotsNames] = useState<string[]>([]);
-  const [fetchingNames, setFetchingNames] = useState<boolean>(false);
-
-  //   limited to two because a larger number causes problems because the API is not adapted to download so many things at once. A correct API allows you to accept an ids array so that you can perform one query, e.g.: "https://swapi.dev/api/people/[1,2,4,6...etd]"
-
-  useEffect(() => {
-    if (data && data.pilots) {
-      const smallerArr = [data.pilots[0], data.pilots[1]];
-      setFetchingNames(true);
-      Promise.all(
-        smallerArr.map((residentUrl) => fetchResidentName(residentUrl))
-      ).then((names) => {
-        setPilotsNames(names);
-        setFetchingNames(false);
-      });
-    }
-  }, [data]);
-
-  const fetchResidentName = async (url: string) => {
-    try {
-      const response = await fetch(url);
-      const residentData = await response.json();
-      return residentData.name || "Unknown Resident";
-    } catch (error) {
-      console.error("Error fetching resident data:", error);
-      return "Unknown Resident";
-    }
-  };
+  const { peopleNames: pilotsNames, fetchingNames } = useFetchPersonNames(
+    data?.pilots
+  );
 
   return (
     <Container>
@@ -79,12 +53,20 @@ const VehiclesDetails = () => {
             </LoaderWrapper>
           ) : (
             <ResidentsContainer>
-              <ResidentsLabel>Pilots:</ResidentsLabel>
-              <ResidentsList>
-                {pilotsNames.map((pilot) => (
-                  <ResidentItem key={pilot}>{pilot}</ResidentItem>
-                ))}
-              </ResidentsList>
+              {data?.pilots.length === 0 ? (
+                <DetailsItem>
+                  <Label>No pilots...</Label>
+                </DetailsItem>
+              ) : (
+                <>
+                  <ResidentsLabel>Pilots:</ResidentsLabel>
+                  <ResidentsList>
+                    {pilotsNames.map((pilot) => (
+                      <ResidentItem key={pilot}>{pilot}</ResidentItem>
+                    ))}
+                  </ResidentsList>
+                </>
+              )}
             </ResidentsContainer>
           )}
         </Content>
@@ -115,7 +97,7 @@ const LoaderWrapper = styled.div`
 const Content = styled.div`
   text-align: left;
   padding: 20px;
-  border: 1px solid  ${({ theme: { colors } }) => colors.gray};
+  border: 1px solid ${({ theme: { colors } }) => colors.gray};
   border-radius: 5px;
 `;
 

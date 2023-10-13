@@ -5,56 +5,27 @@ import Planet from "../../assets/starWarsPlanet.png";
 import Vechicle from "../../assets/vehicle.png";
 import { Link } from "react-router-dom";
 import routerPaths from "../../router/router-paths";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { ClipLoader } from "react-spinners";
 import { styledTheme } from "../../theme";
+import useFetchPersonNames from "../../hooks/useFetchPersonName";
 
 const DetailsPage = () => {
   const { name, avatar, homeworld, vehicles, gender } = useLocation().state;
-  const [vehiclesNames, setVehiclesNames] = useState<
-    { vehicleUrl: string | null; vehicleName: string | null }[]
-  >([]);
-  const [fetchingNames, setFetchingNames] = useState<boolean>(false);
-
-  //   limited to one because a larger number causes problems because the API is not adapted to download so many things at once. A correct API allows you to accept an ids array so that you can perform one query, e.g.: "https://swapi.dev/api/people/[1,2,4,6...etd]"
-
-  useEffect(() => {
-    if (vehicles) {
-      const smallerArr = [vehicles[0]];
-      setFetchingNames(true);
-      Promise.all(smallerArr.map((url) => fetchVehichle(url))).then((names) => {
-        setVehiclesNames(names);
-        setFetchingNames(false);
-      });
-    }
-  }, []);
-
-  const fetchVehichle = async (url: string) => {
-    try {
-      const result = await fetch(url);
-      const resp = await result.json();
-      return {
-        vehicleName: resp.name,
-        vehicleUrl: resp.url,
-      };
-    } catch (error) {
-      console.error("Error fetching vehicle data:", error);
-      return {
-        vehicleName: null,
-        vehicleUrl: null,
-      };
-    }
-  };
+  const { vehiclesNames, fetchingVehiclesNames } =
+    useFetchPersonNames(vehicles);
 
   const Vehicle: React.FC<{
     vehicleUrl: string | null;
     vehicleName: string | null;
   }> = ({ vehicleUrl, vehicleName }) => {
-    return (
+    return vehicleName === null ? (
+      <Detail>No vehicle...</Detail>
+    ) : (
       <LinkStyled
         to={routerPaths.vehiclesDetails}
         state={{
-          vehicleUrl,
+          url: vehicleUrl,
         }}
       >
         <IconLinkWrapper>
@@ -74,8 +45,12 @@ const DetailsPage = () => {
           <AvatarDetails src={EmptyUser} alt="starWars" />
         )}
         <DetailsWrapper>
-          <Detail>NAME: <span>{name}</span> </Detail>
-          <Detail>GENDER: <span>{gender}</span> </Detail>
+          <Detail>
+            NAME: <span>{name}</span>{" "}
+          </Detail>
+          <Detail>
+            GENDER: <span>{gender}</span>{" "}
+          </Detail>
         </DetailsWrapper>
       </DataContainer>
       <Container>
@@ -84,20 +59,20 @@ const DetailsPage = () => {
             <LinkStyled
               to={routerPaths.planetDetails}
               state={{
-                homeworld,
+                url: homeworld,
               }}
             >
               <IconLinkWrapper>
                 <AvatarIcon src={Planet} alt="planet" />
-                Home planet details here...(click)
+                Home planet details
               </IconLinkWrapper>
             </LinkStyled>
-            {fetchingNames ? (
+            {fetchingVehiclesNames ? (
               <LoaderWrapper>
                 <ClipLoader
                   size={50}
                   color={styledTheme.colors.blue}
-                  loading={fetchingNames}
+                  loading={fetchingVehiclesNames}
                 />
               </LoaderWrapper>
             ) : (
@@ -130,24 +105,24 @@ const DataContainer = styled.div`
 
 const LinkStyled = styled(Link)`
   text-decoration: none;
-  color:  ${({ theme: { colors } }) => colors.black};;
+  color: ${({ theme: { colors } }) => colors.black};
   font-weight: bold;
   transition: color 0.2s;
   display: block;
   margin-bottom: 15px;
 
   &:hover {
-    color:  ${({ theme: { colors } }) => colors.blue3};;
+    color: ${({ theme: { colors } }) => colors.blue3};
     text-decoration: underline;
   }
 `;
 
 const Detail = styled.h1`
-  color:  ${({ theme: { colors } }) => colors.daybreakBlue};;
+  color: ${({ theme: { colors } }) => colors.daybreakBlue};
   font-size: 18px;
 
   span {
-    color:  ${({ theme: { colors } }) => colors.black};
+    color: ${({ theme: { colors } }) => colors.black};
   }
 `;
 

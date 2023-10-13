@@ -3,12 +3,12 @@ import styled from "styled-components";
 import Logo from "../../assets/starWarsLogo.png";
 import { ClipLoader } from "react-spinners";
 import { styledTheme } from "../../theme";
-import UserTile from "../../shared/components/UserTile";
+import CharacterTile from "../../shared/components/CharacterTile";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 
 type ListPageType = {
   selectedList: string;
-}
+};
 
 // eslint-disable-next-line react/prop-types
 const ListPage: React.FC<ListPageType> = ({ selectedList }) => {
@@ -28,18 +28,16 @@ const ListPage: React.FC<ListPageType> = ({ selectedList }) => {
           />
         </LoaderWrapper>
       ) : error ? (
-        <ErrorMessage
-          text="Wystąpił błąd, spróbuj później"
-          error={error ? true : false}
-        />
+        <ErrorMessage text="Error, try later..." error={error ? true : false} />
       ) : (
         <>
           <ListWrapper>
             {data?.results.map((character) => (
-              <UserTile
+              <CharacterTile
                 key={character.name}
                 name={character.name}
                 url={character.url}
+                listType={selectedList}
                 homeworld={character.homeworld}
                 vehicles={character.vehicles}
                 gender={character.gender}

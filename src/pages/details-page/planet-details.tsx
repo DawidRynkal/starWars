@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useLocation } from "react-router";
 import { useGetSinglePlanetQuery } from "../../services/star-wars-api";
 import { ClipLoader } from "react-spinners";
@@ -6,41 +5,16 @@ import ErrorMessage from "../../shared/components/ErrorMessage";
 import { styledTheme } from "../../theme";
 import styled from "styled-components";
 import Planet from "../../assets/starWarsPlanet.png";
+import useFetchPersonNames from "../../hooks/useFetchPersonName";
 
 const PlanetDetails = () => {
-  const { homeworld } = useLocation().state;
+  const { url } = useLocation().state;
   const { data, error, isLoading } = useGetSinglePlanetQuery({
-    planetUrl: homeworld,
+    planetUrl: url,
   });
-
-  const [residentNames, setResidentNames] = useState<string[]>([]);
-  const [fetchingNames, setFetchingNames] = useState<boolean>(false);
-
-  //   limited to two because a larger number causes problems because the API is not adapted to download so many things at once. A correct API allows you to accept an ids array so that you can perform one query, e.g.: "https://swapi.dev/api/people/[1,2,4,6...etd]"
-
-  useEffect(() => {
-    if (data && data.residents) {
-      const smallerArr = [data.residents[0], data.residents[1]];
-      setFetchingNames(true);
-      Promise.all(
-        smallerArr.map((residentUrl) => fetchResidentName(residentUrl))
-      ).then((names) => {
-        setResidentNames(names);
-        setFetchingNames(false);
-      });
-    }
-  }, [data]);
-
-  const fetchResidentName = async (url: string) => {
-    try {
-      const response = await fetch(url);
-      const residentData = await response.json();
-      return residentData.name || "Unknown Resident";
-    } catch (error) {
-      console.error("Error fetching resident data:", error);
-      return "Unknown Resident";
-    }
-  };
+  const { peopleNames: residentNames, fetchingNames } = useFetchPersonNames(
+    data?.residents
+  );
 
   return (
     <Container>
@@ -83,8 +57,10 @@ const PlanetDetails = () => {
             <ResidentsContainer>
               <ResidentsLabel>Residents:</ResidentsLabel>
               <ResidentsList>
-                {residentNames.map((resident) => (
-                  <ResidentItem key={resident}>{resident}</ResidentItem>
+                {residentNames.map((resident, index) => (
+                  <ResidentItem key={`${resident}-${index}`}>
+                    {resident}
+                  </ResidentItem>
                 ))}
               </ResidentsList>
             </ResidentsContainer>
@@ -116,7 +92,7 @@ const LoaderWrapper = styled.div`
 const Content = styled.div`
   text-align: left;
   padding: 20px;
-  border: 1px solid  ${({ theme: { colors } }) => colors.gray};
+  border: 1px solid ${({ theme: { colors } }) => colors.gray};
   border-radius: 5px;
 `;
 
