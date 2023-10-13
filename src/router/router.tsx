@@ -39,6 +39,10 @@ const Container = styled.div`
 const Content = styled.div`
   margin-left: 140px;
   width: 100%;
+
+  @media (max-width: ${({ theme: { breakpoints } }) => breakpoints.xs}px) {
+    margin-left: 0;
+  }
 `;
 
 export default Router;
